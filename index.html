@@ -1,0 +1,935 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GiftGenie — AI Shopping Store</title>
+  <script src="https://www.paypal.com/sdk/js?client-id=__CLIENT_ID__&currency=USD&intent=capture"></script>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-soft: #eef2ff;
+      --highlight-bg: #f0fdf4;
+      --highlight-border: #16a34a;
+      --success: #0a7a2f;
+      --success-bg: #dcfce7;
+      --warn: #b00020;
+      --warn-bg: #fee2e2;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 0;
+      line-height: 1.45;
+    }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .header-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+    }
+    .brand-icon {
+      font-size: 1.6rem;
+    }
+    .sandbox-badge {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 1240px;
+      margin: 24px auto 48px;
+      padding: 0 20px;
+    }
+
+    /* AI Assistant Bar */
+    .ai-bar {
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 22px 24px;
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.15);
+      margin-bottom: 24px;
+    }
+    .ai-bar-title {
+      margin: 0 0 6px 0;
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-bar-sub {
+      margin: 0 0 16px 0;
+      font-size: 0.92rem;
+      color: #e0e7ff;
+    }
+    .ai-controls {
+      display: grid;
+      grid-template-columns: 1fr 160px auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .field-group label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #c7d2fe;
+    }
+    .ai-controls input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      font-size: 0.96rem;
+      background: #ffffff;
+      color: var(--text);
+      outline: none;
+    }
+    .ai-controls input:focus {
+      box-shadow: 0 0 0 3px rgba(199, 210, 254, 0.6);
+    }
+    button#go {
+      padding: 12px 22px;
+      height: 44px;
+      border: none;
+      border-radius: 10px;
+      background: #fbbf24;
+      color: #1e1b4b;
+      font-weight: 700;
+      font-size: 0.96rem;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+    button#go:hover {
+      background: #f59e0b;
+    }
+    button#go:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+    #status {
+      margin: 10px 0 0 0;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #fef08a;
+      min-height: 1.2em;
+    }
+
+    /* Store Layout: Grid + Cart Panel */
+    .store-layout {
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Search & Category Filter Header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    .catalog-search {
+      flex: 1;
+      min-width: 220px;
+      max-width: 340px;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+    .catalog-search:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 18px;
+      max-height: 130px;
+      overflow-y: auto;
+      padding-bottom: 4px;
+    }
+    .filter-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-transform: capitalize;
+      transition: all 0.15s ease;
+    }
+    .filter-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .filter-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    /* Product Grid & Cards */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 16px;
+    }
+    .product-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+    }
+    .product-card.picked {
+      background: var(--highlight-bg);
+      border: 2px solid var(--highlight-border);
+      box-shadow: 0 8px 20px rgba(22, 163, 74, 0.14);
+    }
+    .ai-pick-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #16a34a;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      letter-spacing: 0.02em;
+      z-index: 2;
+    }
+    .product-media {
+      margin-bottom: 10px;
+    }
+    .product-img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 10px;
+      background: var(--bg);
+      display: block;
+    }
+    .product-emoji {
+      font-size: 2.3rem;
+      line-height: 1;
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .product-card.picked .product-emoji {
+      background: #dcfce7;
+    }
+    .category-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      background: var(--primary-soft);
+      padding: 3px 8px;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      width: fit-content;
+    }
+    .product-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      color: var(--text);
+    }
+    .product-price {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: auto;
+    }
+    .ai-reason-box {
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #ffffff;
+      border-left: 3px solid #16a34a;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #14532d;
+    }
+    .ai-reason-box b {
+      display: block;
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      color: #15803d;
+      margin-bottom: 2px;
+    }
+
+    /* Load More Pagination */
+    .load-more-wrap {
+      margin-top: 22px;
+      text-align: center;
+    }
+    .load-more-btn {
+      padding: 11px 24px;
+      border-radius: 999px;
+      border: 1.5px solid var(--primary);
+      background: var(--surface);
+      color: var(--primary);
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .load-more-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .showing-count {
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    /* Cart Panel on the Right */
+    .cart-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      position: sticky;
+      top: 76px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+    }
+    .cart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .cart-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cart-count {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+    .empty-cart {
+      text-align: center;
+      padding: 28px 12px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .empty-cart-icon {
+      font-size: 2.2rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* Cart Items */
+    .item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin: 8px 0;
+      background: #f8fafc;
+    }
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+    .item-price {
+      color: var(--primary);
+      white-space: nowrap;
+    }
+    .item-reason {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Budget Progress Bar */
+    .budget-box {
+      margin: 14px 0;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+    .budget-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+    .total {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #16a34a;
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    .progress-fill.over {
+      background: var(--warn);
+    }
+
+    /* Safety Checklist */
+    .safety-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin: 12px 0;
+    }
+    .safety-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 0 0 8px 0;
+    }
+    .safety-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.86rem;
+    }
+    .safety-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+    .tick {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--success-bg);
+      color: var(--success);
+      font-size: 0.75rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .tick.fail {
+      background: var(--warn-bg);
+      color: var(--warn);
+    }
+
+    .warn {
+      color: var(--warn);
+      background: var(--warn-bg);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      margin-top: 10px;
+    }
+    .approve-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: 10px 0 6px;
+      text-align: center;
+    }
+
+    /* Order Complete Card */
+    .done-card {
+      background: var(--highlight-bg);
+      border: 2px solid var(--highlight-border);
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+    .done-icon {
+      font-size: 2.2rem;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .done-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--success);
+      margin: 0 0 6px 0;
+    }
+    .done {
+      color: var(--success);
+      font-weight: 700;
+      font-size: 0.9rem;
+      word-break: break-all;
+    }
+
+    /* Responsive: stack cart below grid on mobile */
+    @media (max-width: 900px) {
+      .store-layout {
+        grid-template-columns: 1fr;
+      }
+      .cart-panel {
+        position: static;
+      }
+      .ai-controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon">🎁</span>
+        <span>GiftGenie</span>
+      </div>
+      <div class="sandbox-badge">Demo store - sandbox payments, no real money</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- AI Assistant Bar -->
+    <section class="ai-bar">
+      <h1 class="ai-bar-title">✨ AI Gift Shopping Assistant</h1>
+      <p class="ai-bar-sub">Tell me who or what you're shopping for and set a maximum budget. I'll curate the best gifts, and our server verifies the total before you pay.</p>
+      <div class="ai-controls">
+        <div class="field-group">
+          <label for="req">What do you need?</label>
+          <input id="req" placeholder="Tell me what you need, e.g. gift for my sister, likes books and plants">
+        </div>
+        <div class="field-group">
+          <label for="budget">Max Budget (USD)</label>
+          <input id="budget" type="number" value="30" min="1">
+        </div>
+        <button id="go">Find gifts</button>
+      </div>
+      <p id="status"></p>
+    </section>
+
+    <!-- Store Catalog + Cart Panel -->
+    <div class="store-layout">
+      <!-- Left: Product Catalog -->
+      <section>
+        <div class="section-header">
+          <h2 class="section-title">Store Catalogue</h2>
+          <input id="search-box" class="catalog-search" type="search" placeholder="Search products, categories, or tags...">
+        </div>
+        <div id="filter-bar" class="filter-bar"></div>
+        <div id="product-grid" class="product-grid"></div>
+        <div id="load-more-wrap" class="load-more-wrap" style="display: none;">
+          <div id="showing-count" class="showing-count"></div>
+          <button id="load-more-btn" class="load-more-btn">Load more products</button>
+        </div>
+      </section>
+
+      <!-- Right (or below on mobile): Cart & Checkout Panel -->
+      <aside class="cart-panel">
+        <div class="cart-header">
+          <h2 class="cart-title">🛒 Your AI Cart</h2>
+          <span id="cart-count" class="cart-count">0 items</span>
+        </div>
+        <div id="cart">
+          <div class="empty-cart">
+            <span class="empty-cart-icon">🛍️</span>
+            Describe what you need above and click <b>Find gifts</b> to let the AI build a cart within your budget.
+          </div>
+        </div>
+        <div id="paypal-button" style="margin-top: 12px;"></div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const CATEGORY_EMOJIS = {
+      "books": "📚",
+      "plants": "🪴",
+      "gardening and plants": "🌱",
+      "home": "🕯️",
+      "home decor": "🖼️",
+      "bedding": "🛏️",
+      "cleaning": "🧼",
+      "food": "🍫",
+      "snacks": "🍿",
+      "drinks": "☕",
+      "pantry and groceries": "🍯",
+      "kitchen": "🍳",
+      "tech": "🎧",
+      "electronics accessories": "💻",
+      "phone accessories": "📱",
+      "desk": "🗂️",
+      "stationery": "✏️",
+      "fitness": "🧘",
+      "outdoor and travel": "🏕️",
+      "games": "🧩",
+      "toys and games": "🎲",
+      "skincare": "🧴",
+      "haircare": "💇",
+      "makeup": "💄",
+      "personal care": "🛁",
+      "baby": "🍼",
+      "pet supplies": "🐾",
+      "bags and wallets": "🎒",
+      "fashion accessories": "🕶️",
+      "jewellery": "💍",
+      "gifts": "🎁",
+      "party supplies": "🎈",
+      "health and wellness": "🌿"
+    };
+
+    const PAGE_SIZE = 24;
+
+    let allProducts = [];
+    let categories = ["all"];
+    let activeCategory = "all";
+    let searchQuery = "";
+    let visibleCount = PAGE_SIZE;
+    let pickedById = {}; // id -> reason
+    let cart = null;
+    let budget = 0;
+    let buttonsShown = false;
+
+    function emojiFor(category) {
+      return CATEGORY_EMOJIS[category] || "🛍️";
+    }
+
+    function renderFilters() {
+      const bar = document.getElementById("filter-bar");
+      bar.innerHTML = "";
+      categories.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = "filter-btn" + (activeCategory === cat ? " active" : "");
+        const icon = cat === "all" ? "✨" : emojiFor(cat);
+        btn.textContent = `${icon} ${cat}`;
+        btn.onclick = () => {
+          activeCategory = cat;
+          visibleCount = PAGE_SIZE;
+          renderFilters();
+          renderProducts();
+        };
+        bar.appendChild(btn);
+      });
+    }
+
+    function getFilteredProducts() {
+      const q = searchQuery.trim().toLowerCase();
+      return allProducts.filter(p => {
+        if (activeCategory !== "all" && p.category !== activeCategory) {
+          return false;
+        }
+        if (!q) return true;
+        const haystack = `${p.name} ${p.category} ${(p.tags || []).join(" ")}`.toLowerCase();
+        return haystack.includes(q);
+      });
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById("product-grid");
+      const filtered = getFilteredProducts();
+
+      // Sort AI-picked products to the top so user sees highlights right away
+      const sorted = [...filtered].sort((a, b) => {
+        const aPicked = pickedById[a.id] ? 1 : 0;
+        const bPicked = pickedById[b.id] ? 1 : 0;
+        return bPicked - aPicked || a.id - b.id;
+      });
+
+      const pageItems = sorted.slice(0, visibleCount);
+
+      grid.innerHTML = pageItems.map(p => {
+        const reason = pickedById[p.id];
+        const isPicked = Boolean(reason);
+        return `
+          <div class="product-card ${isPicked ? "picked" : ""}">
+            ${isPicked ? '<span class="ai-pick-badge">✨ AI Pick</span>' : ""}
+            <div>
+              <div class="product-media">
+                <img
+                  class="product-img"
+                  src="/static/images/${p.id}.jpg"
+                  alt="${p.name}"
+                  loading="lazy"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+                <div class="product-emoji" style="display: none;">${emojiFor(p.category)}</div>
+              </div>
+              <span class="category-tag">${p.category}</span>
+              <h3 class="product-name">${p.name}</h3>
+            </div>
+            <div>
+              <div class="product-price">$${p.price.toFixed(2)}</div>
+              ${isPicked ? `<div class="ai-reason-box"><b>Why AI picked this</b>${reason}</div>` : ""}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const loadMoreWrap = document.getElementById("load-more-wrap");
+      const showingCount = document.getElementById("showing-count");
+      const loadMoreBtn = document.getElementById("load-more-btn");
+
+      if (sorted.length > 0) {
+        loadMoreWrap.style.display = "block";
+        showingCount.textContent = `Showing ${pageItems.length} of ${sorted.length} products`;
+        loadMoreBtn.style.display = visibleCount < sorted.length ? "inline-block" : "none";
+      } else {
+        loadMoreWrap.style.display = "none";
+      }
+    }
+
+    document.getElementById("load-more-btn").onclick = () => {
+      visibleCount += PAGE_SIZE;
+      renderProducts();
+    };
+
+    document.getElementById("search-box").oninput = (e) => {
+      searchQuery = e.target.value;
+      visibleCount = PAGE_SIZE;
+      renderProducts();
+    };
+
+    async function loadProducts() {
+      const res = await fetch("/api/products");
+      allProducts = await res.json();
+      const uniqueCats = [...new Set(allProducts.map(p => p.category))];
+      categories = ["all", ...uniqueCats];
+      renderFilters();
+      renderProducts();
+    }
+
+    loadProducts();
+
+    document.getElementById("go").onclick = async () => {
+      const status = document.getElementById("status");
+      const goBtn = document.getElementById("go");
+      status.textContent = "Finding items...";
+      goBtn.disabled = true;
+      budget = parseFloat(document.getElementById("budget").value) || 0;
+
+      try {
+        const res = await fetch("/api/cart", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ request: document.getElementById("req").value, budget: budget })
+        });
+        cart = await res.json();
+        status.textContent = "";
+
+        // Highlight AI-picked cards on the product grid
+        pickedById = {};
+        cart.cart.forEach(i => {
+          pickedById[i.id] = i.reason;
+        });
+        visibleCount = PAGE_SIZE;
+        renderProducts();
+
+        // Update cart count badge
+        const countEl = document.getElementById("cart-count");
+        countEl.textContent = `${cart.cart.length} ${cart.cart.length === 1 ? "item" : "items"}`;
+
+        // Build cart panel HTML
+        let html = "";
+        cart.cart.forEach(i => {
+          const prod = allProducts.find(p => p.id === i.id);
+          const emoji = prod ? emojiFor(prod.category) : "🎁";
+          html += `
+            <div class="item">
+              <div class="item-top">
+                <span>${emoji} ${i.name}</span>
+                <span class="item-price">$${i.price.toFixed(2)}</span>
+              </div>
+              <div class="item-reason">${i.reason}</div>
+            </div>
+          `;
+        });
+
+        const pct = budget > 0 ? Math.min(100, Math.round((cart.total / budget) * 100)) : 100;
+        html += `
+          <div class="budget-box">
+            <div class="budget-row">
+              <span class="total">Total: $${cart.total.toFixed(2)}</span>
+              <span>$${cart.total.toFixed(2)} of $${budget.toFixed(2)} budget</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill ${cart.ok ? "" : "over"}" style="width: ${pct}%;"></div>
+            </div>
+          </div>
+
+          <div class="safety-box">
+            <div class="safety-title">Agent Safety Checks</div>
+            <ul class="safety-list">
+              <li class="safety-item">
+                <span class="tick ${cart.ok ? "" : "fail"}">${cart.ok ? "✓" : "✕"}</span>
+                <span>Total is within budget</span>
+              </li>
+              <li class="safety-item">
+                <span class="tick">✓</span>
+                <span>Total verified by the server</span>
+              </li>
+              <li class="safety-item">
+                <span class="tick">✓</span>
+                <span>You approve before anything is paid</span>
+              </li>
+            </ul>
+          </div>
+        `;
+
+        html += cart.ok
+          ? '<div class="approve-note">Review the cart, then pay with PayPal below to approve it.</div>'
+          : '<div class="warn">Over budget - payment is disabled.</div>';
+
+        document.getElementById("cart").innerHTML = html;
+
+        if (!cart.ok) {
+          document.getElementById("paypal-button").innerHTML = "";
+          buttonsShown = false;
+        } else if (cart.ok && !buttonsShown) {
+          buttonsShown = true;
+          paypal.Buttons({
+            createOrder: async () => {
+              const r = await fetch("/api/create-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: cart.cart.map(i => i.id), budget: budget })
+              });
+              const order = await r.json();
+              if (!r.ok || !order.id) {
+                throw new Error(order.message || order.error || "Could not create PayPal order");
+              }
+              return order.id;
+            },
+            onApprove: async (data) => {
+              const r = await fetch("/api/capture-order/" + data.orderID, { method: "POST" });
+              const result = await r.json();
+              if (!r.ok || result.status !== "COMPLETED") {
+                document.getElementById("status").textContent =
+                  "Capture failed: " + (result.message || result.name || JSON.stringify(result));
+                return;
+              }
+              document.getElementById("cart").innerHTML = `
+                <div class="done-card">
+                  <span class="done-icon">🎉</span>
+                  <h3 class="done-title">Order complete</h3>
+                  <div class="done">Payment ${result.status}! Order ID: ${data.orderID}</div>
+                </div>
+              `;
+              document.getElementById("paypal-button").innerHTML = "";
+              buttonsShown = false;
+            },
+            onError: (err) => {
+              document.getElementById("status").textContent = "Something went wrong: " + err;
+            }
+          }).render("#paypal-button");
+        }
+      } catch (err) {
+        status.textContent = "Something went wrong: " + err;
+      } finally {
+        goBtn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>
